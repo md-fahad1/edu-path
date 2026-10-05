@@ -2,7 +2,11 @@ import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import { PrismaClient } from '../src/generated/prisma/client';
-import { categories, chapters, questions } from './seed-data';
+import { categories, chapters, questions as baseQuestions } from './seed-data';
+import { extraQuestions } from './seed-data-extra';
+
+// Notun MCQ seed-data-extra.ts-e; base-er pore jog hoy tai age-r question slug (…-q1, -q2) bodlay na
+const questions = [...baseQuestions, ...extraQuestions];
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 const L = ['A', 'B', 'C', 'D'];
@@ -89,7 +93,8 @@ async function main() {
     counters.set(chSlug, n);
     const slug = `${chSlug}-q${n}`;
     const cat = chapterCat.get(chSlug)!;
-    const examId = cat === 'bcs' ? bcsExam.id : cat === 'admission' ? admExam.id : null;
+    // Exam page-e shob na dhukiye shudhu protita chapter-er prothom 8 ta (nomuna set)
+    const examId = n <= 8 ? (cat === 'bcs' ? bcsExam.id : cat === 'admission' ? admExam.id : null) : null;
     const q = await prisma.question.upsert({
       where: { slug },
       update: {},
@@ -112,16 +117,27 @@ async function main() {
       } as any,
     });
   };
+  // Chapter-e 300 ta MCQ thakle ekta test-e shob na diye 20 ta kore set (max 6 set); protita set-e chapter-er shob topic theke mix
+  const SET = 20, MAX_SETS = 6;
   for (const [chSlug, ids] of byChapter) {
     const ch = chapters.find((c) => c[3] === chSlug)!;
     const bcs = ch[0] === 'bcs';
-    await mk(`${chSlug}-model-test`, `${ch[4].replace(/^অধ্যায় \d+: /, '')} – মডেল টেস্ট`, ids, { type: 'CHAPTER', chapterId: chapterId.get(chSlug), negativeMark: bcs ? 0.5 : 0.25 });
+    const title = ch[4].replace(/^অধ্যায় \d+: /, '');
+    const sets = Math.min(MAX_SETS, Math.max(1, Math.ceil(ids.length / SET)));
+    for (let i = 0; i < sets; i++) {
+      const part = (sets === 1 ? ids : ids.filter((_, idx) => idx % sets === i)).slice(0, SET);
+      if (part.length < 5) continue;
+      await mk(i === 0 ? `${chSlug}-model-test` : `${chSlug}-model-test-${i + 1}`, `${title} – মডেল টেস্ট ${i + 1}`, part, { type: 'CHAPTER', chapterId: chapterId.get(chSlug), negativeMark: bcs ? 0.5 : 0.25 });
+    }
   }
-  const allBcs = [...byChapter].filter(([s]) => chapterCat.get(s) === 'bcs').flatMap(([, ids]) => ids);
-  await mk('bcs-preli-full-mock-1', 'বিসিএস প্রিলি – ফুল মক টেস্ট ১ (Premium)', allBcs, { type: 'MOCK', examId: bcsExam.id, isPremium: true, negativeMark: 0.5, durationMin: 25 });
-  const allAdm = [...byChapter].filter(([s]) => chapterCat.get(s) === 'admission').flatMap(([, ids]) => ids);
-  await mk('admission-mock-1', 'ভর্তি পরীক্ষা – মক টেস্ট ১', allAdm, { type: 'EXAM_PAPER', examId: admExam.id, negativeMark: 0.25, durationMin: 15 });
+  const pick = (cat: string, per: number) => [...byChapter].filter(([s]) => chapterCat.get(s) === cat).flatMap(([, ids]) => ids.slice(0, per));
+  const bcsMock = pick('bcs', 8);
+  await mk('bcs-preli-full-mock-1', 'বিসিএস প্রিলি – ফুল মক টেস্ট ১ (Premium)', bcsMock, { type: 'MOCK', examId: bcsExam.id, isPremium: true, negativeMark: 0.5, durationMin: Math.ceil(bcsMock.length * 0.6) });
+  const admMock = pick('admission', 8);
+  await mk('admission-mock-1', 'ভর্তি পরীক্ষা – মক টেস্ট ১', admMock, { type: 'EXAM_PAPER', examId: admExam.id, negativeMark: 0.25, durationMin: Math.ceil(admMock.length * 0.6) });
 
+  const perChapter = [...byChapter].map(([s, ids]) => `${s}: ${ids.length}`).join(' | ');
+  console.log('Per-chapter MCQ count ->', perChapter);
   console.log(`Seed done: ${questions.length} questions, ${chapters.length} chapters.`);
   console.log(`Admin login: ${adminEmail} / ${adminPass}   |   Student: student@edu.local / Student@12345`);
 }

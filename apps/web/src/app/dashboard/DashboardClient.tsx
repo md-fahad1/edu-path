@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/components/useRequireAuth';
 import { bn, cn } from '@/lib/utils';
-import { Badge, Card, Empty, LinkButton, Loading, PageTitle, Progress, Stat, accTone } from '@/components/ui';
+import { Badge, Card, Empty, ErrorState, LinkButton, Loading, PageTitle, Progress, Stat, accTone } from '@/components/ui';
 import { GoalCard } from '@/components/GoalCard';
 import { MyExam } from '@/components/MyExam';
 
@@ -23,6 +23,7 @@ export function DashboardClient() {
   const act = useQuery({ queryKey: ['act'], queryFn: () => api<Act>('/analytics/activity'), ...on });
   const me = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/users/me'), ...on });
   if (!allowed || ov.isLoading) return <Loading />;
+  if (ov.isError) return <ErrorState onRetry={() => ov.refetch()} />;
   const o = ov.data;
 
   return (

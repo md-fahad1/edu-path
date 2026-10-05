@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { LETTERS, bn, cn } from '@/lib/utils';
 import { useTree } from '@/components/admin';
 import { Badge, Button, Card, Empty, ErrorBox, Loading, PageTitle, Select } from '@/components/ui';
+import { RichText } from '@/components/RichText';
 
 type Item = { id: string; text: string; explanation: string | null; answerVerified: boolean; aiGenerated: boolean; source: string | null; createdById: string | null; chapter: { name: string; subject: { name: string } }; creator: { name: string } | null; options: { id: string; label: string; text: string; isCorrect: boolean }[] };
 
@@ -66,9 +67,9 @@ export default function ReviewQueue() {
             {cur.source && <Badge>{cur.source}</Badge>}
             <span className="ml-auto text-slate-400">{bn(i + 1)} / {bn(items.length)}</span>
           </div>
-          <h2 className="text-lg font-semibold leading-snug sm:text-xl">{cur.text}</h2>
-          <ul className="mt-4 space-y-2">{cur.options.map((o, idx) => <li key={o.id} className={cn('flex gap-3 rounded-xl border px-4 py-3', o.isCorrect ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200')}><b>{LETTERS[idx]}.</b><span>{o.text}</span>{o.isCorrect && <span className="ml-auto text-emerald-700">✔ সঠিক</span>}</li>)}</ul>
-          <div className="mt-4 rounded-xl bg-slate-50 p-4 text-[15px]">{cur.explanation ? <><b>ব্যাখ্যা:</b> {cur.explanation}</> : <span className="text-amber-700">⚠ ব্যাখ্যা নেই (ব্যাখ্যা ছাড়া পেজ noindex থাকবে)</span>}</div>
+          <h2 className="text-lg font-semibold leading-snug sm:text-xl"><RichText text={cur.text} /></h2>
+          <ul className="mt-4 space-y-2">{cur.options.map((o, idx) => <li key={o.id} className={cn('flex gap-3 rounded-xl border px-4 py-3', o.isCorrect ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200')}><b>{LETTERS[idx]}.</b><RichText text={o.text} />{o.isCorrect && <span className="ml-auto text-emerald-700">✔ সঠিক</span>}</li>)}</ul>
+          <div className="mt-4 rounded-xl bg-slate-50 p-4 text-[15px]">{cur.explanation ? <><b>ব্যাখ্যা:</b> <RichText text={cur.explanation} /></> : <span className="text-amber-700">⚠ ব্যাখ্যা নেই (ব্যাখ্যা ছাড়া পেজ noindex থাকবে)</span>}</div>
           <div className="mt-5 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
             <Button variant="success" size="lg" disabled={busy} onClick={() => act(role === 'ADMIN' ? 'PUBLISHED' : 'REVIEWED')}>✔ {role === 'ADMIN' ? 'Publish' : 'Approve'} (A)</Button>
             <Link href={`/admin/questions/${cur.id}`} className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 font-medium hover:bg-slate-50">✎ এডিট (E)</Link>

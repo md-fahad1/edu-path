@@ -107,3 +107,33 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
     </Card>
   );
 }
+export function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  return (
+    <div role="alert" className="rounded-2xl border border-rose-200 bg-white px-6 py-10 text-center">
+      <p className="text-3xl" aria-hidden>😕</p>
+      <p className="mt-2 text-lg font-semibold text-slate-900">তথ্য আনা যায়নি</p>
+      <p className="mt-1 text-slate-600">{message || 'ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।'}</p>
+      {onRetry && <Button className="mt-4" onClick={onRetry}>আবার চেষ্টা করুন</Button>}
+    </div>
+  );
+}
+
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cn('skeleton', className)} aria-hidden="true" />;
+}
+
+export function QuestionSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-4" role="status" aria-label="লোড হচ্ছে">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
+          <Skeleton className="h-5 w-4/5" />
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {[0, 1, 2, 3].map((j) => <Skeleton key={j} className="h-12" />)}
+          </div>
+        </div>
+      ))}
+      <span className="sr-only">লোড হচ্ছে…</span>
+    </div>
+  );
+}

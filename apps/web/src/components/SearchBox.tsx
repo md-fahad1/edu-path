@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { trunc } from '@/lib/utils';
+import { plain } from '@/lib/rich';
 
 type Res = { questions: { slug: string; text: string; chapter: { name: string } }[]; chapters: { name: string; slug: string; subject: { slug: string; category: { slug: string } } }[]; exams: { name: string; slug: string }[] };
 
@@ -37,7 +38,7 @@ export function SearchBox({ compact }: { compact?: boolean }) {
           {empty && <p className="px-3 py-4 text-center text-slate-500">কিছু পাওয়া যায়নি</p>}
           {res.chapters.map((c) => <Link key={c.slug} href={`/${c.subject.category.slug}/${c.subject.slug}/${c.slug}`} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-slate-50"><span className="text-xs text-brand-600">চ্যাপ্টার</span><br />{c.name}</Link>)}
           {res.exams.map((e) => <Link key={e.slug} href={`/exam/${e.slug}`} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-slate-50"><span className="text-xs text-violet-600">পরীক্ষা</span><br />{e.name}</Link>)}
-          {res.questions.map((x) => <Link key={x.slug} href={`/mcq/${x.slug}`} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-slate-50"><span className="text-xs text-slate-500">{x.chapter.name}</span><br />{trunc(x.text, 90)}</Link>)}
+          {res.questions.map((x) => <Link key={x.slug} href={`/mcq/${x.slug}`} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-slate-50"><span className="text-xs text-slate-500">{x.chapter.name}</span><br />{trunc(plain(x.text), 90)}</Link>)}
         </div>
       )}
     </div>

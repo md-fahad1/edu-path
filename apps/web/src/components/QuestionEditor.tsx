@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { LETTERS, cn } from '@/lib/utils';
 import { STATUS_BN, STATUS_TONE, useTree } from './admin';
 import { Badge, Button, Card, ErrorBox, Input, Select, Textarea } from './ui';
+import { RichText } from './RichText';
 
 export type QForm = { id?: string; text: string; explanation: string; difficulty: string; chapterId: string; topicId: string; year: string; source: string; options: { text: string; isCorrect: boolean }[]; status?: string };
 export const blankQ = (): QForm => ({ text: '', explanation: '', difficulty: 'MEDIUM', chapterId: '', topicId: '', year: '', source: '', options: [0, 1, 2, 3].map(() => ({ text: '', isCorrect: false })) });
@@ -43,6 +44,7 @@ export function QuestionEditor({ initial }: { initial: QForm }) {
       <div className="space-y-4">
         <Card className="space-y-4">
           <Textarea label="প্রশ্ন *" value={f.text} onChange={(e) => setF({ ...f, text: e.target.value })} rows={3} />
+          <p className="-mt-2 text-xs text-slate-500">{'সূত্র: $x^2$, $\\frac{a}{b}$, রসায়ন: $\\ce{H2O}$ · আলাদা লাইনে বড় সূত্র: $$E=mc^2$$ · ছবি: ![বর্ণনা](https://…) · টাকার $ চিহ্ন: \\$ (অপশন ও ব্যাখ্যাতেও একই নিয়ম)'}</p>
           <fieldset><legend className="mb-1 text-sm font-medium text-slate-700">অপশন (সঠিকটির পাশে টিক দিন) *</legend>
             <div className="space-y-2">{f.options.map((o, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -70,7 +72,7 @@ export function QuestionEditor({ initial }: { initial: QForm }) {
           <Input label="সাল" type="number" value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} placeholder="2022" />
           <Input label="উৎস" value={f.source} onChange={(e) => setF({ ...f, source: e.target.value })} placeholder="ঢাকা বোর্ড ২০২২" />
         </Card>
-        <Card className="!bg-slate-50 text-sm text-slate-600"><p className="font-semibold text-slate-800">প্রিভিউ</p><p className="mt-1">{f.text || '—'}</p><ul className="mt-2 space-y-1">{f.options.map((o, i) => <li key={i} className={o.isCorrect ? 'font-semibold text-emerald-700' : ''}>{LETTERS[i]}. {o.text || '…'}</li>)}</ul></Card>
+        <Card className="!bg-slate-50 text-sm text-slate-600"><p className="font-semibold text-slate-800">প্রিভিউ</p><p className="mt-1"><RichText text={f.text || '—'} /></p><ul className="mt-2 space-y-1">{f.options.map((o, i) => <li key={i} className={o.isCorrect ? 'font-semibold text-emerald-700' : ''}>{LETTERS[i]}. <RichText text={o.text || '…'} /></li>)}</ul>{f.explanation && <p className="mt-3 border-t border-slate-200 pt-2"><b>ব্যাখ্যা:</b> <RichText text={f.explanation} /></p>}</Card>
       </div>
     </div>
   );

@@ -99,6 +99,20 @@ export class AuthService {
     return { ok: true };
   }
 
+  /** Login thaka obosthay password bodlano. Onno shob device logout, ei device logged-in thake */
+  async changePassword(userId: string, current: string, next: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive || !(await bcrypt.compare(current, user.passwordHash)))
+      throw new BadRequestException('বর্তমান পাসওয়ার্ড সঠিক নয়');
+    if (current === next) throw new BadRequestException('নতুন পাসওয়ার্ড আগেরটির মতো হতে পারবে না');
+    const passwordHash = await bcrypt.hash(next, 11);
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+    ]);
+    return this.issue(user);
+  }
+
   async resetPassword(token: string, password: string) {
     const invalid = () => new BadRequestException('লিংকটি সঠিক নয় বা মেয়াদ শেষ। আবার চেষ্টা করুন।');
     const row = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash: sha256(token) }, include: { user: true } });

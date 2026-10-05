@@ -23,6 +23,8 @@ body { font-family: var(--font-sans); background: var(--page-bg); color: var(--p
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 .prose-bn p { margin: 0.5rem 0; }
+/* a11y: halka hint lekha shada bg-te pora kosto, tai ektu gaŕho (dark mode-e alada niyom ache) */
+html:not(.dark) .text-slate-400 { color: #64748b; }
 .skeleton { background: linear-gradient(90deg, #e8ebf2 25%, #f3f5f9 37%, #e8ebf2 63%); background-size: 400% 100%; animation: sk 1.3s ease infinite; border-radius: 8px; }
 @keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 /* Ad slot: fixed height => layout shift nei */

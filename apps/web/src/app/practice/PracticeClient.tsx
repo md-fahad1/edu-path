@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { LETTERS, bn, cn } from '@/lib/utils';
 import { Badge, Button, Card, Empty, ErrorBox, Progress, Select, Spinner } from '@/components/ui';
+import { RichText } from '@/components/RichText';
 
 export type Tree = { id: string; name: string; slug: string; subjects: { id: string; name: string; slug: string; chapters: { id: string; name: string; slug: string; _count: { questions: number }; topics: { id: string; name: string }[] }[] }[] }[];
 type Q = { id: string; slug: string; text: string; difficulty: string; topic: { name: string } | null; options: { id: string; label: string; text: string }[] };
@@ -84,7 +85,7 @@ function Runner({ chapterId, topicId, label, onExit }: { chapterId: string; topi
       {q && (
         <Card className="!p-4 sm:!p-6">
           <div className="mb-2 flex flex-wrap gap-1.5">{q.topic && <Badge tone="blue">{q.topic.name}</Badge>}</div>
-          <h2 className="text-lg font-semibold leading-snug sm:text-xl">{q.text}</h2>
+          <h2 className="text-lg font-semibold leading-snug sm:text-xl"><RichText text={q.text} /></h2>
           <ul className="mt-4 space-y-2.5">
             {q.options.map((o, i) => {
               const right = ans?.correctOptionId === o.id;
@@ -93,7 +94,7 @@ function Runner({ chapterId, topicId, label, onExit }: { chapterId: string; topi
                 <li key={o.id}>
                   <button type="button" disabled={!!picked} onClick={() => pick(o.id)} className={cn('flex w-full items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition-colors', !ans && !picked && 'border-slate-200 hover:border-brand-300 hover:bg-brand-50/50 active:bg-brand-50', picked === o.id && !ans && 'border-brand-400 bg-brand-50', right && 'border-emerald-400 bg-emerald-50', wrong && 'border-rose-400 bg-rose-50', ans && !right && !wrong && 'border-slate-200 text-slate-500')}>
                     <span className={cn('grid size-7 shrink-0 place-items-center rounded-full text-sm font-semibold', right ? 'bg-emerald-500 text-white' : wrong ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600')}>{LETTERS[i]}</span>
-                    <span>{o.text}</span>
+                    <RichText text={o.text} />
                   </button>
                 </li>
               );
@@ -102,7 +103,7 @@ function Runner({ chapterId, topicId, label, onExit }: { chapterId: string; topi
           {ans && (
             <div className="mt-4 rounded-xl bg-slate-50 p-4" aria-live="polite">
               <p className={cn('font-semibold', ans.isCorrect ? 'text-emerald-700' : 'text-rose-600')}>{ans.isCorrect ? '✔ সঠিক উত্তর!' : '✘ ভুল হয়েছে'}</p>
-              {ans.explanation && <p className="mt-1 text-slate-700">{ans.explanation}</p>}
+              {ans.explanation && <p className="mt-1 text-slate-700"><RichText text={ans.explanation} /></p>}
             </div>
           )}
           <div className="mt-5 flex justify-end">

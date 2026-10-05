@@ -6,6 +6,8 @@ import { api, ApiError } from '@/lib/api';
 import { useRequireAuth } from '@/components/useRequireAuth';
 import { LETTERS, bn, cn, fmtTime } from '@/lib/utils';
 import { Button, Card, ErrorBox, Loading, LinkButton } from '@/components/ui';
+import { RichText } from '@/components/RichText';
+import { toast } from '@/lib/toast';
 import { useTest, type Attempt } from './store';
 
 export function TestRunner({ slug }: { slug: string }) {
@@ -20,6 +22,7 @@ export function TestRunner({ slug }: { slug: string }) {
   const [online, setOnline] = useState(true);
   const st = useTest();
   const submitted = useRef(false);
+  const warned = useRef({ five: false, one: false });
 
   // --- start / resume
   useEffect(() => {
@@ -79,6 +82,8 @@ export function TestRunner({ slug }: { slug: string }) {
     const tick = () => {
       const s = Math.round((useTest.getState().deadlineMs - Date.now()) / 1000);
       setLeft(s);
+      if (att.durationSec > 300 && s <= 300 && s > 60 && !warned.current.five) { warned.current.five = true; toast.info('⏱ আর ৫ মিনিট বাকি'); }
+      if (att.durationSec > 60 && s <= 60 && s > 0 && !warned.current.one) { warned.current.one = true; toast.error('⏱ আর ১ মিনিট বাকি!'); }
       if (s <= 0) finish();
     };
     tick();
@@ -94,11 +99,12 @@ export function TestRunner({ slug }: { slug: string }) {
     return () => window.removeEventListener('beforeunload', h);
   }, [att]);
 
-  // --- keyboard: 1-4 select, n/p navigate
+  // --- keyboard: 1-4 select, n/p navigate (dialog khola thakle bondho)
   useEffect(() => {
-    if (!att) return;
+    if (!att || confirm || paletteOpen) return;
     const h = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const s = useTest.getState();
       const q = att.questions[s.index];
       if (['1', '2', '3', '4'].includes(e.key)) { const o = q.options[Number(e.key) - 1]; if (o) { s.answer(q.id, o.id); save(q.id, o.id); } }
@@ -107,7 +113,15 @@ export function TestRunner({ slug }: { slug: string }) {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [att, save]);
+  }, [att, save, confirm, paletteOpen]);
+
+  // --- Esc diye dialog bondho
+  useEffect(() => {
+    if (!confirm && !paletteOpen) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape' && !submitting) { setConfirm(false); setPaletteOpen(false); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [confirm, paletteOpen, submitting]);
 
   if (!ready || (!att && !err)) return <Loading label="পরীক্ষা প্রস্তুত হচ্ছে…" />;
   if (!allowed) return <Loading label="লগইন পেজে নেওয়া হচ্ছে…" />;
@@ -131,7 +145,10 @@ export function TestRunner({ slug }: { slug: string }) {
   const Palette = (
     <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-5">
       {att.questions.map((x, i) => (
-        <button key={x.id} onClick={() => { st.go(i); setPaletteOpen(false); }} aria-label={`প্রশ্ন ${i + 1}`}
+        <button
+          key={x.id} onClick={() => { st.go(i); setPaletteOpen(false); }}
+          aria-label={`প্রশ্ন ${i + 1}, ${st.answers[x.id] ? 'উত্তর দেওয়া' : 'বাকি'}${st.marked[x.id] ? ', মার্ক করা' : ''}`}
+          aria-current={i === st.index ? 'true' : undefined}
           className={cn('relative aspect-square rounded-lg text-sm font-semibold ring-offset-1', st.answers[x.id] ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-700', st.marked[x.id] && '!bg-amber-400 !text-slate-900', i === st.index && 'ring-2 ring-brand-600')}>
           {bn(i + 1)}
         </button>
@@ -144,14 +161,14 @@ export function TestRunner({ slug }: { slug: string }) {
     <div className="mx-auto max-w-5xl pb-24 lg:pb-0">
       <div className="sticky top-14 z-30 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur sm:top-16 sm:mx-0 sm:rounded-2xl sm:border">
         <div className="min-w-0"><p className="truncate text-sm font-semibold">{att.test.title}</p><p className="text-xs text-slate-500">{bn(answered)}/{bn(total)} উত্তর দেওয়া {!online && <span className="font-semibold text-rose-600">· অফলাইন (নেট এলে সেভ হবে)</span>}</p></div>
-        <div className={cn('rounded-xl px-3 py-1.5 font-mono text-lg font-bold tabular-nums', urgent ? 'animate-pulse bg-rose-100 text-rose-700' : 'bg-brand-50 text-brand-700')} aria-label="বাকি সময়">⏱ {left === null ? '--:--' : fmtTime(left)}</div>
+        <div role="timer" className={cn('rounded-xl px-3 py-1.5 font-mono text-lg font-bold tabular-nums', urgent ? 'animate-pulse bg-rose-100 text-rose-700' : 'bg-brand-50 text-brand-700')} aria-label="বাকি সময়">⏱ {left === null ? '--:--' : fmtTime(left)}</div>
       </div>
 
       {err && <div className="mb-3"><ErrorBox message={err.msg} /></div>}
       <div className="grid gap-4 lg:grid-cols-[1fr_17rem]">
         <Card className="!p-4 sm:!p-6">
           <p className="text-sm font-medium text-slate-500">প্রশ্ন {bn(st.index + 1)} / {bn(total)}</p>
-          <h1 className="mt-1 text-lg font-semibold leading-snug sm:text-xl">{q.text}</h1>
+          <h1 className="mt-1 text-lg font-semibold leading-snug sm:text-xl"><RichText text={q.text} /></h1>
           <ul className="mt-4 space-y-2.5">
             {q.options.map((o, i) => {
               const on = st.answers[q.id] === o.id;
@@ -159,14 +176,14 @@ export function TestRunner({ slug }: { slug: string }) {
                 <li key={o.id}>
                   <button type="button" onClick={() => choose(o.id)} aria-pressed={on} className={cn('flex w-full items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-base transition-colors', on ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-slate-200 hover:border-brand-300 hover:bg-slate-50 active:bg-brand-50')}>
                     <span className={cn('grid size-7 shrink-0 place-items-center rounded-full text-sm font-semibold', on ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600')}>{LETTERS[i]}</span>
-                    <span>{o.text}</span>
+                    <RichText text={o.text} />
                   </button>
                 </li>
               );
             })}
           </ul>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-            <Button variant="outline" size="sm" onClick={() => st.toggleMark(q.id)}>{st.marked[q.id] ? '🟨 মার্ক সরান' : '🏳 রিভিউয়ের জন্য মার্ক'}</Button>
+            <Button variant="outline" size="sm" onClick={() => st.toggleMark(q.id)} aria-pressed={!!st.marked[q.id]}>{st.marked[q.id] ? '🟨 মার্ক সরান' : '🏳 রিভিউয়ের জন্য মার্ক'}</Button>
             {st.answers[q.id] && <Button variant="ghost" size="sm" onClick={() => { st.answer(q.id, null); save(q.id, null); }}>উত্তর মুছুন</Button>}
           </div>
           <div className="mt-4 hidden justify-between gap-3 border-t border-slate-100 pt-4 lg:flex">
@@ -175,7 +192,7 @@ export function TestRunner({ slug }: { slug: string }) {
           </div>
         </Card>
 
-        <aside className="hidden lg:block">
+        <aside className="hidden lg:block" aria-label="প্রশ্ন প্যালেট">
           <Card className="sticky top-36"><p className="mb-3 font-semibold">প্রশ্ন প্যালেট</p>{Palette}{Legend}<Button variant="success" className="mt-4 w-full" onClick={() => setConfirm(true)}>পরীক্ষা শেষ করুন</Button></Card>
         </aside>
       </div>
@@ -189,7 +206,7 @@ export function TestRunner({ slug }: { slug: string }) {
 
       {paletteOpen && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/40 lg:hidden" onClick={() => setPaletteOpen(false)}>
-          <div className="max-h-[75vh] w-full overflow-auto rounded-t-3xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[75vh] w-full overflow-auto rounded-t-3xl bg-white p-5" role="dialog" aria-modal="true" aria-label="প্রশ্ন প্যালেট" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between"><p className="font-semibold">প্রশ্ন প্যালেট</p><button className="text-slate-500" onClick={() => setPaletteOpen(false)}>বন্ধ ✕</button></div>
             {Palette}{Legend}
           </div>
@@ -197,11 +214,11 @@ export function TestRunner({ slug }: { slug: string }) {
       )}
 
       {confirm && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6">
-            <h2 className="text-lg font-bold">পরীক্ষা সাবমিট করবেন?</h2>
+            <h2 id="confirm-title" className="text-lg font-bold">পরীক্ষা সাবমিট করবেন?</h2>
             <p className="mt-2 text-slate-600">{bn(answered)}টি উত্তর দিয়েছেন{total - answered > 0 && `, ${bn(total - answered)}টি বাকি আছে`}। সাবমিটের পর আর বদলানো যাবে না।</p>
-            <div className="mt-5 flex gap-2"><Button variant="success" className="flex-1" disabled={submitting} onClick={finish}>{submitting ? 'জমা হচ্ছে…' : 'হ্যাঁ, সাবমিট'}</Button><Button variant="outline" disabled={submitting} onClick={() => setConfirm(false)}>ফিরে যান</Button></div>
+            <div className="mt-5 flex gap-2"><Button variant="success" className="flex-1" disabled={submitting} onClick={finish}>{submitting ? 'জমা হচ্ছে…' : 'হ্যাঁ, সাবমিট'}</Button><Button variant="outline" autoFocus disabled={submitting} onClick={() => setConfirm(false)}>ফিরে যান</Button></div>
           </div>
         </div>
       )}

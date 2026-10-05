@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { sapiOrNull } from '@/lib/api';
 import { LETTERS, trunc } from '@/lib/utils';
+import { plain } from '@/lib/rich';
+import { SITE } from '@/lib/utils';
+import { ShareButtons } from '@/components/ShareButtons';
 import type { Option } from '@/lib/types';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { QuestionCard } from '@/components/QuestionCard';
@@ -24,8 +27,8 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
   if (!q) return {};
   const right = q.options.find((o) => o.isCorrect);
   return {
-    title: `${trunc(q.text, 60)} | MCQ উত্তর ও ব্যাখ্যা`,
-    description: `উত্তর: ${right?.text ?? ''}। ${trunc(q.explanation ?? q.text, 130)}`,
+    title: `${trunc(plain(q.text), 60)} | MCQ উত্তর ও ব্যাখ্যা`,
+    description: `উত্তর: ${plain(right?.text)}। ${trunc(plain(q.explanation ?? q.text), 130)}`,
     alternates: { canonical: `/mcq/${q.slug}` },
     // explanation chhara question thin content, tai noindex
     robots: q.explanation ? undefined : { index: false, follow: true },
@@ -40,8 +43,8 @@ export default async function McqPage({ params }: P) {
   const c = q.chapter;
   const base = `/${c.subject.category.slug}/${c.subject.slug}/${c.slug}`;
   const ld = {
-    '@context': 'https://schema.org', '@type': 'Question', name: q.text,
-    acceptedAnswer: { '@type': 'Answer', text: `${LETTERS[q.options.findIndex((o) => o.isCorrect)]}. ${right?.text}${q.explanation ? ` – ${q.explanation}` : ''}` },
+    '@context': 'https://schema.org', '@type': 'Question', name: plain(q.text),
+    acceptedAnswer: { '@type': 'Answer', text: `${LETTERS[q.options.findIndex((o) => o.isCorrect)]}. ${plain(right?.text)}${q.explanation ? ` – ${plain(q.explanation)}` : ''}` },
   };
   return (
     <div className="mx-auto max-w-3xl">
@@ -51,11 +54,15 @@ export default async function McqPage({ params }: P) {
       <div className="mt-5 flex flex-wrap gap-3">
         <LinkButton href={`/practice?chapterId=${c.id}`}>এই চ্যাপ্টারে প্র্যাকটিস</LinkButton>
         <LinkButton href={base} variant="outline">চ্যাপ্টারের সব MCQ</LinkButton>
+        <div className="mt-1 w-full">
+          <p className="mb-2 text-sm font-medium text-slate-600">বন্ধুদের সাথে শেয়ার করুন</p>
+          <ShareButtons url={`${SITE}/mcq/${q.slug}`} title={plain(q.text)} text={`এই MCQ টা পারবে? ${plain(q.text)}`} />
+        </div>
       </div>
       {related && related.length > 0 && (
         <Card className="mt-8">
           <h2 className="mb-2 font-semibold">সম্পর্কিত প্রশ্ন</h2>
-          <ul className="space-y-1.5">{related.map((r) => <li key={r.id}><Link href={`/mcq/${r.slug}`} className="text-brand-700 hover:underline">{trunc(r.text, 100)}</Link></li>)}</ul>
+          <ul className="space-y-1.5">{related.map((r) => <li key={r.id}><Link href={`/mcq/${r.slug}`} className="text-brand-700 hover:underline">{trunc(plain(r.text), 100)}</Link></li>)}</ul>
         </Card>
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />

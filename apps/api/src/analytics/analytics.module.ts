@@ -51,7 +51,7 @@ export class AnalyticsService {
   }
 
   async overview(userId: string) {
-    const [solved, stats, tests, streak] = await Promise.all([
+    const [solved, stats, tests, streak, todayRow] = await Promise.all([
       this.prisma.dailyActivity.aggregate({ where: { userId }, _sum: { questionsSolved: true } }),
       this.prisma.userTopicStat.findMany({
         where: { userId },
@@ -59,6 +59,7 @@ export class AnalyticsService {
       }),
       this.prisma.testAttempt.count({ where: { userId, status: { not: 'IN_PROGRESS' } } }),
       this.streak(userId),
+      this.prisma.dailyActivity.findUnique({ where: { userId_date: { userId, date: todayDate() } } }),
     ]);
     const attempted = stats.reduce((n, s) => n + s.attempted, 0);
     const correct = stats.reduce((n, s) => n + s.correct, 0);
@@ -72,6 +73,7 @@ export class AnalyticsService {
     }
     return {
       totalSolved: solved._sum.questionsSolved ?? 0,
+      todaySolved: todayRow?.questionsSolved ?? 0,
       accuracy: attempted ? Math.round((correct / attempted) * 100) : 0,
       streak,
       testsTaken: tests,

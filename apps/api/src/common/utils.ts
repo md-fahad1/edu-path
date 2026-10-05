@@ -47,4 +47,5 @@ export function seededShuffle<T>(arr: T[], seed: string): T[] {
   return a;
 }
 
-export const todayDate = () => new Date(new Date().toISOString().slice(0, 10));
+// Dhaka (UTC+6) onujayi "aj": raat 12-ta theke din shuru, streak ar daily goal thik thake
+export const todayDate = () => new Date(new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 10));

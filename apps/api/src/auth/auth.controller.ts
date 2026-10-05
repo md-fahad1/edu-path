@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 
 const COOKIE = 'rt';
 function cookieOpts() {
@@ -51,5 +51,20 @@ export class AuthController {
     const { maxAge, ...clear } = cookieOpts();
     res.clearCookie(COOKIE, clear);
     return { ok: true };
+  }
+
+  // ---------- নতুন: forgot / reset password ----------
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(200)
+  @Post('forgot-password')
+  forgot(@Body() dto: ForgotPasswordDto) {
+    return this.auth.forgotPassword(dto.email);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(200)
+  @Post('reset-password')
+  reset(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.token, dto.password);
   }
 }

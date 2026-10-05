@@ -1,6 +1,6 @@
 import { Global, Injectable, Logger, Module } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-
+import { MailService } from './mail.service';
 /** Admin edit korle Next.js ISR page on-demand refresh (optional) */
 @Injectable()
 export class RevalidateService {
@@ -17,5 +17,5 @@ export class RevalidateService {
 }
 
 @Global()
-@Module({ providers: [PrismaService, RevalidateService], exports: [PrismaService, RevalidateService] })
+@Module({ providers: [PrismaService, RevalidateService, MailService], exports: [PrismaService, RevalidateService, MailService] })
 export class CommonModule {}

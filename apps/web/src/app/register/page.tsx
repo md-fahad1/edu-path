@@ -17,7 +17,7 @@ export default function RegisterPage() {
     const isEmail = f.contact.includes('@');
     try {
       await register({ name: f.name, password: f.password, ...(isEmail ? { email: f.contact.trim() } : { phone: f.contact.trim() }) });
-      router.replace('/dashboard');
+      router.replace('/onboarding');
     } catch (x: any) { setErr(x.message); setBusy(false); }
   }
   return (

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { SITE_NAME, cn } from '@/lib/utils';
 import { btnClass } from './ui';
 import { SearchBox } from './SearchBox';
+import { ThemeControls } from './ThemeControls';
 
 const NAV = [
   { href: '/hsc', label: 'এইচএসসি' },
@@ -40,6 +41,7 @@ export function Header() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden w-56 md:block xl:w-72"><SearchBox compact /></div>
+          <ThemeControls />
           {!ready ? <span className="skeleton h-9 w-20" /> : user ? (
             <div className="flex items-center gap-1.5">
               {(user.role === 'ADMIN' || user.role === 'TEACHER') && <Link href="/admin" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50 sm:block">অ্যাডমিন</Link>}

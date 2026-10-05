@@ -23,9 +23,15 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#1f55dc' };
 
+// Page ankar age theme + font size boshay, jeno reload-e shada jhilik na dey
+const initScript = `(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'system';if(t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches))d.classList.add('dark');var f=localStorage.getItem('fs');if(f==='sm'||f==='lg')d.setAttribute('data-fs',f);}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="bn">
+    <html lang="bn" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: initScript }} />
+      </head>
       <body className="min-h-screen antialiased">
         <Providers>
           <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">মূল কনটেন্টে যান</a>

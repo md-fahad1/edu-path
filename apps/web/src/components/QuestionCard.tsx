@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { DIFF_BN, LETTERS, cn } from '@/lib/utils';
 import type { Question } from '@/lib/types';
 import { Badge, Button, ErrorBox, Select, Textarea } from './ui';
+import { toast } from '@/lib/toast';
 
 /** Practice-style card: option chap dile shathe shathe shothik uttor + byakkha dekhay */
 export function QuestionCard({ q, no, link = true, initiallyOpen = false }: { q: Question; no?: number; link?: boolean; initiallyOpen?: boolean }) {
@@ -24,7 +25,10 @@ export function QuestionCard({ q, no, link = true, initiallyOpen = false }: { q:
   async function bookmark() {
     if (!user) return;
     const r = await api<{ bookmarked: boolean }>(`/bookmarks/${q.id}`, { method: 'POST' }).catch(() => null);
-    if (r) setMarked(r.bookmarked);
+    if (r) {
+      setMarked(r.bookmarked);
+      toast.success(r.bookmarked ? 'বুকমার্ক করা হয়েছে' : 'বুকমার্ক সরানো হয়েছে');
+    } else toast.error('বুকমার্ক করা যায়নি, আবার চেষ্টা করুন');
   }
 
   return (
@@ -72,7 +76,7 @@ export function QuestionCard({ q, no, link = true, initiallyOpen = false }: { q:
       )}
       <div className="mt-3 flex flex-wrap items-center gap-1 text-sm">
         {!open && <button className="rounded-lg px-2.5 py-1.5 font-medium text-brand-700 hover:bg-brand-50" onClick={() => setRevealed(true)}>উত্তর দেখুন</button>}
-        {user && <button className={cn('rounded-lg px-2.5 py-1.5 font-medium hover:bg-slate-100', marked ? 'text-amber-600' : 'text-slate-600')} onClick={bookmark}>{marked ? '★ বুকমার্ক করা' : '☆ বুকমার্ক'}</button>}
+        <button className={cn('rounded-lg px-2.5 py-1.5 font-medium hover:bg-slate-100', marked ? 'text-amber-600' : 'text-slate-600')} onClick={user ? bookmark : () => toast.info('বুকমার্ক করতে আগে লগইন করুন')}>{marked ? '★ বুকমার্ক করা' : '☆ বুকমার্ক'}</button>
         <button className="rounded-lg px-2.5 py-1.5 text-slate-500 hover:bg-slate-100" onClick={() => setReportOpen((v) => !v)}>⚑ ভুল রিপোর্ট</button>
       </div>
       {reportOpen && <ReportForm id={q.id} onDone={() => setReportOpen(false)} />}
@@ -87,7 +91,7 @@ function ReportForm({ id, onDone }: { id: string; onDone: () => void }) {
   const [err, setErr] = useState('');
   async function send() {
     setState('busy'); setErr('');
-    try { await api(`/questions/${id}/report`, { method: 'POST', json: { reason, note: note || undefined } }); setState('done'); setTimeout(onDone, 1200); }
+    try { await api(`/questions/${id}/report`, { method: 'POST', json: { reason, note: note || undefined } }); setState('done'); toast.success('রিপোর্ট জমা হয়েছে, ধন্যবাদ!'); setTimeout(onDone, 1200); }
     catch (e: any) { setErr(e.message); setState('idle'); }
   }
   if (state === 'done') return <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">ধন্যবাদ! রিপোর্ট জমা হয়েছে, আমরা যাচাই করব।</p>;

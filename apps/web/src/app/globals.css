@@ -11,8 +11,13 @@
   --color-brand-900: #14307a;
 }
 
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-body { font-family: var(--font-sans); background: #f7f8fb; color: #172033; line-height: 1.7; }
+:root { --page-bg: #f7f8fb; --page-fg: #172033; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; font-size: 16px; }
+html[data-fs='sm'] { font-size: 15px; }
+html[data-fs='lg'] { font-size: 18px; }
+
+body { font-family: var(--font-sans); background: var(--page-bg); color: var(--page-fg); line-height: 1.7; transition: background-color .2s, color .2s; }
 * { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
@@ -22,3 +27,47 @@ body { font-family: var(--font-sans); background: #f7f8fb; color: #172033; line-
 @keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 /* Ad slot: fixed height => layout shift nei */
 .ad-slot { min-height: 100px; }
+
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.toast-in { animation: toast-in .2s ease-out; }
+
+/* ================= DARK MODE =================
+   slate scale ulte deya hoyeche, tai text-slate-900 => halka, bg-slate-100 => gaŕho.
+   Ei CSS unlayered, tai Tailwind utility-r cheye beshi priority pay. */
+html.dark {
+  color-scheme: dark;
+  --page-bg: #0d1220;
+  --page-fg: #e6ebf5;
+
+  --color-slate-50: #1a2236;
+  --color-slate-100: #202a42;
+  --color-slate-200: #2b3652;
+  --color-slate-300: #3a4766;
+  --color-slate-400: #7c89a8;
+  --color-slate-500: #97a3bf;
+  --color-slate-600: #b2bcd3;
+  --color-slate-700: #ccd4e6;
+  --color-slate-800: #e2e8f4;
+  --color-slate-900: #f1f4fb;
+
+  --color-brand-50: #16254a;
+  --color-brand-200: #28458f;
+  --color-emerald-50: #0f2a22;
+  --color-rose-50: #33141c;
+  --color-amber-50: #33260d;
+  --color-violet-50: #251c42;
+}
+html.dark .bg-white { background-color: #151c2e; }
+html.dark .bg-white\/90 { background-color: rgb(13 18 32 / 0.88); }
+html.dark .bg-white\/95 { background-color: rgb(13 18 32 / 0.95); }
+
+html.dark .text-brand-700, html.dark .text-brand-600, html.dark .hover\:text-brand-700:hover, html.dark .hover\:text-brand-600:hover { color: #8db1ff; }
+html.dark .text-emerald-600, html.dark .text-emerald-700 { color: #6ee7b7; }
+html.dark .text-emerald-900 { color: #a7f3d0; }
+html.dark .text-rose-600, html.dark .text-rose-700 { color: #fda4af; }
+html.dark .text-rose-900 { color: #fecdd3; }
+html.dark .text-amber-600, html.dark .text-amber-700, html.dark .text-amber-800 { color: #fcd34d; }
+html.dark .text-violet-700 { color: #c4b5fd; }
+html.dark .border-rose-200 { border-color: #6b2a3a; }
+html.dark .border-brand-300 { border-color: #3a5db3; }
+html.dark .skeleton { background: linear-gradient(90deg, #1a2236 25%, #232d47 37%, #1a2236 63%); background-size: 400% 100%; }

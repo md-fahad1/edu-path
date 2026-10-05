@@ -1,7 +1,8 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../common/mail.service';
 import { randomToken, sha256 } from '../common/utils';
 import { LoginDto, RegisterDto } from './auth.dto';
 
@@ -9,7 +10,8 @@ const REFRESH_DAYS = () => Number(process.env.REFRESH_TTL_DAYS || 30);
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  private log = new Logger('Auth');
+  constructor(private prisma: PrismaService, private jwt: JwtService, private mail: MailService) {}
 
   private publicUser(u: { id: string; name: string; email: string | null; phone: string | null; role: string }) {
     return { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role };
@@ -68,5 +70,49 @@ export class AuthService {
   async logout(token?: string) {
     if (!token) return;
     await this.prisma.refreshToken.updateMany({ where: { tokenHash: sha256(token), revokedAt: null }, data: { revokedAt: new Date() } });
+  }
+
+  // ---------- forgot / reset password ----------
+  /** Email thakuk ba na thakuk shob shomoy ok: keu jeno jante na pare kon email registered */
+  async forgotPassword(emailRaw: string) {
+    const user = await this.prisma.user.findUnique({ where: { email: emailRaw.trim().toLowerCase() } });
+    if (user && user.isActive) {
+      const token = randomToken(32);
+      await this.prisma.$transaction([
+        this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id } }), // purono link batil
+        this.prisma.passwordResetToken.create({
+          data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + 30 * 60_000) },
+        }),
+      ]);
+      const base = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '');
+      const link = `${base}/reset-password?token=${token}`;
+      // await korchi na, jeno response time diye email ache kina bojha na jay
+      void this.mail
+        .send(
+          user.email!,
+          'পাসওয়ার্ড রিসেট করুন',
+          `আপনার পাসওয়ার্ড রিসেট করতে এই লিংকে যান (৩০ মিনিট পর্যন্ত বৈধ):\n${link}\n\nআপনি অনুরোধ না করলে এই মেইল উপেক্ষা করুন।`,
+          `<p>আপনার পাসওয়ার্ড রিসেট করতে নিচের বাটনে ক্লিক করুন (৩০ মিনিট পর্যন্ত বৈধ)।</p><p><a href="${link}" style="background:#1f55dc;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">পাসওয়ার্ড রিসেট করুন</a></p><p style="color:#666;font-size:13px">আপনি অনুরোধ না করলে এই মেইল উপেক্ষা করুন।</p>`,
+        )
+        .catch((e) => this.log.error(`reset mail failed: ${e.message}`));
+    }
+    return { ok: true };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const invalid = () => new BadRequestException('লিংকটি সঠিক নয় বা মেয়াদ শেষ। আবার চেষ্টা করুন।');
+    const row = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash: sha256(token) }, include: { user: true } });
+    if (!row || row.usedAt || row.expiresAt < new Date() || !row.user.isActive) throw invalid();
+
+    const passwordHash = await bcrypt.hash(password, 11);
+    await this.prisma.$transaction(async (tx) => {
+      // atomic claim: dui tab-e ekshathe use korleo shudhu ekta jitbe
+      const claimed = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });
+      if (claimed.count === 0) throw invalid();
+      await tx.user.update({ where: { id: row.userId }, data: { passwordHash } });
+      // shob device-e logout (kew password churi kore thakle session-o jabe)
+      await tx.refreshToken.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    });
+    return { ok: true };
   }
 }

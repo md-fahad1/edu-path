@@ -11,3 +11,11 @@ export class LoginDto {
   @IsString() @MinLength(3) identifier: string; // email ba phone
   @IsString() @MinLength(1) password: string;
 }
+export class ForgotPasswordDto {
+  @IsEmail() email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString() @MinLength(20) @MaxLength(200) token: string;
+  @IsString() @MinLength(8) @MaxLength(72) password: string;
+}

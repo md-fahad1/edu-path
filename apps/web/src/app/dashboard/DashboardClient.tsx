@@ -5,12 +5,14 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/components/useRequireAuth';
 import { bn, cn } from '@/lib/utils';
 import { Badge, Card, Empty, LinkButton, Loading, PageTitle, Progress, Stat, accTone } from '@/components/ui';
+import { GoalCard } from '@/components/GoalCard';
+import { MyExam } from '@/components/MyExam';
 
-type Overview = { totalSolved: number; accuracy: number; streak: number; testsTaken: number; subjectAccuracy: { subject: string; attempted: number; accuracy: number }[] };
+type Overview = { todaySolved: number; totalSolved: number; accuracy: number; streak: number; testsTaken: number; subjectAccuracy: { subject: string; attempted: number; accuracy: number }[] };
 type Weak = { topicId: string; topic: string; chapterId: string; chapter: string; accuracy: number; attempted: number }[];
 type Hist = { id: string; title: string; slug: string; score: number; total: number; correct: number; wrong: number; skipped: number; at: string }[];
 type Act = { date: string; count: number }[];
-type Me = { isPremium: boolean };
+type Me = { isPremium: boolean; targetCategory: string | null; dailyGoal: number; onboarded: boolean };
 
 export function DashboardClient() {
   const { user, allowed } = useRequireAuth();
@@ -26,6 +28,16 @@ export function DashboardClient() {
   return (
     <>
       <PageTitle title={`স্বাগতম, ${user?.name.split(' ')[0]} 👋`} sub="আপনার প্রস্তুতির সারসংক্ষেপ" right={me.data?.isPremium ? <Badge tone="amber">👑 প্রিমিয়াম</Badge> : <LinkButton href="/pricing" variant="outline" size="sm">👑 প্রিমিয়াম নিন</LinkButton>} />
+      {me.data && !me.data.onboarded && (
+        <Card className="mb-4 !border-brand-200 !bg-brand-50">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-medium">👋 আপনার পরীক্ষা ও দৈনিক লক্ষ্য সেট করুন, ড্যাশবোর্ড আপনার মতো সাজিয়ে দেব।</p>
+            <LinkButton href="/onboarding" size="sm">১ মিনিটে সেট করুন</LinkButton>
+          </div>
+        </Card>
+      )}
+      {me.data && <GoalCard solved={o?.todaySolved ?? 0} goal={me.data.dailyGoal} />}
+      {me.data?.targetCategory && <MyExam slug={me.data.targetCategory} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="মোট সমাধান" value={bn(o?.totalSolved ?? 0)} />
         <Stat label="সঠিকতা" value={`${bn(o?.accuracy ?? 0)}%`} />

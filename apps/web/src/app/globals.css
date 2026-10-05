@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Hind Siliguri', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9eaff;
+  --color-brand-200: #bcdaff;
+  --color-brand-500: #2f6df6;
+  --color-brand-600: #1f55dc;
+  --color-brand-700: #1a44b3;
+  --color-brand-900: #14307a;
+}
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: #f7f8fb; color: #172033; line-height: 1.7; }
+* { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+.prose-bn p { margin: 0.5rem 0; }
+.skeleton { background: linear-gradient(90deg, #e8ebf2 25%, #f3f5f9 37%, #e8ebf2 63%); background-size: 400% 100%; animation: sk 1.3s ease infinite; border-radius: 8px; }
+@keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+/* Ad slot: fixed height => layout shift nei */
+.ad-slot { min-height: 100px; }

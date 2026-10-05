@@ -1,0 +1,423 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- ENUMS ----------
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum QuestionStatus {
+  DRAFT
+  REVIEWED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TestType {
+  CHAPTER
+  EXAM_PAPER
+  MOCK
+  CUSTOM
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ImportStatus {
+  UPLOADED
+  PROCESSING
+  NEEDS_REVIEW
+  COMPLETED
+  FAILED
+}
+
+// ---------- USERS ----------
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  attempts      TestAttempt[]
+  bookmarks     Bookmark[]
+  reports       QuestionReport[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  topicStats    UserTopicStat[]
+  dailyActivity DailyActivity[]
+  reviewed      Question[]       @relation("ReviewedBy")
+  created       Question[]       @relation("CreatedBy")
+  importJobs    ImportJob[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------- CONTENT HIERARCHY ----------
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
+
+  subjects Subject[]
+  exams    Exam[]
+}
+
+model Subject {
+  id         String  @id @default(cuid())
+  categoryId String
+  name       String
+  slug       String
+  order      Int     @default(0)
+  isActive   Boolean @default(true)
+
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  chapters Chapter[]
+
+  @@unique([categoryId, slug])
+}
+
+model Chapter {
+  id        String  @id @default(cuid())
+  subjectId String
+  name      String
+  slug      String
+  summary   String? @db.Text
+  order     Int     @default(0)
+  isPremium Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  subject   Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topics    Topic[]
+  questions Question[]
+  tests     ModelTest[]
+
+  @@unique([subjectId, slug])
+}
+
+model Topic {
+  id        String @id @default(cuid())
+  chapterId String
+  name      String
+  slug      String
+  order     Int    @default(0)
+
+  chapter   Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  questions Question[]
+  stats     UserTopicStat[]
+
+  @@unique([chapterId, slug])
+}
+
+// Exam = BCS 36th Preli, DU Ka Unit 2023 etc.
+model Exam {
+  id                String  @id @default(cuid())
+  categoryId        String
+  name              String
+  slug              String  @unique
+  year              Int
+  conductor         String?
+  answerKeyOfficial Boolean @default(false)
+
+  category  Category    @relation(fields: [categoryId], references: [id])
+  questions Question[]
+  tests     ModelTest[]
+
+  @@index([categoryId, year])
+}
+
+// ---------- QUESTIONS ----------
+model Question {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  text           String         @db.Text
+  explanation    String?        @db.Text
+  difficulty     Difficulty     @default(MEDIUM)
+  status         QuestionStatus @default(DRAFT)
+  year           Int?
+  source         String?
+  aiGenerated    Boolean        @default(false)
+  answerVerified Boolean        @default(false)
+  viewCount      Int            @default(0)
+  chapterId      String
+  topicId        String?
+  examId         String?
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdById    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  chapter  Chapter  @relation(fields: [chapterId], references: [id])
+  topic    Topic?   @relation(fields: [topicId], references: [id])
+  exam     Exam?    @relation(fields: [examId], references: [id])
+  reviewer User?    @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  creator  User?    @relation("CreatedBy", fields: [createdById], references: [id])
+
+  options   Option[]
+  testItems ModelTestQuestion[]
+  answers   AttemptAnswer[]
+  bookmarks Bookmark[]
+  reports   QuestionReport[]
+
+  @@index([chapterId, status])
+  @@index([topicId])
+  @@index([examId])
+  @@index([status, createdAt])
+}
+
+model Option {
+  id         String  @id @default(cuid())
+  questionId String
+  label      String
+  text       String  @db.Text
+  isCorrect  Boolean @default(false)
+
+  question Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  AttemptAnswer[]
+
+  @@unique([questionId, label])
+}
+
+// ---------- TESTS ----------
+model ModelTest {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  type         TestType  @default(CHAPTER)
+  durationMin  Int       @default(20)
+  negativeMark Float     @default(0.25)
+  markPerQ     Float     @default(1)
+  isPremium    Boolean   @default(false)
+  isPublished  Boolean   @default(false)
+  chapterId    String?
+  examId       String?
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  chapter   Chapter?            @relation(fields: [chapterId], references: [id])
+  exam      Exam?               @relation(fields: [examId], references: [id])
+  questions ModelTestQuestion[]
+  attempts  TestAttempt[]
+}
+
+model ModelTestQuestion {
+  testId     String
+  questionId String
+  order      Int
+
+  test     ModelTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question Question  @relation(fields: [questionId], references: [id])
+
+  @@id([testId, questionId])
+  @@index([testId, order])
+}
+
+model TestAttempt {
+  id           String        @id @default(cuid())
+  userId       String
+  testId       String
+  status       AttemptStatus @default(IN_PROGRESS)
+  startedAt    DateTime      @default(now())
+  submittedAt  DateTime?
+  score        Float         @default(0)
+  correctCount Int           @default(0)
+  wrongCount   Int           @default(0)
+  skippedCount Int           @default(0)
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test    ModelTest       @relation(fields: [testId], references: [id])
+  answers AttemptAnswer[]
+
+  @@index([userId, startedAt])
+  @@index([testId, score])
+}
+
+model AttemptAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  isCorrect        Boolean  @default(false)
+  timeSpentSec     Int      @default(0)
+  answeredAt       DateTime @default(now())
+
+  attempt  TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id])
+  option   Option?     @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([attemptId, questionId])
+}
+
+// ---------- USER LEARNING DATA ----------
+model Bookmark {
+  userId     String
+  questionId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
+}
+
+model UserTopicStat {
+  userId          String
+  topicId         String
+  attempted       Int      @default(0)
+  correct         Int      @default(0)
+  lastPracticedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+}
+
+model DailyActivity {
+  userId          String
+  date            DateTime @db.Date
+  questionsSolved Int      @default(0)
+  minutesSpent    Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
+}
+
+model QuestionReport {
+  id         String       @id @default(cuid())
+  questionId String
+  userId     String?
+  reason     String
+  note       String?      @db.Text
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+// ---------- PREMIUM ----------
+model Plan {
+  id           String  @id @default(cuid())
+  name         String
+  priceBdt     Int
+  durationDays Int
+  features     Json?
+  isActive     Boolean @default(true)
+
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model Subscription {
+  id       String             @id @default(cuid())
+  userId   String
+  planId   String
+  status   SubscriptionStatus @default(ACTIVE)
+  startsAt DateTime           @default(now())
+  endsAt   DateTime
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([userId, status, endsAt])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  planId         String?
+  subscriptionId String?
+  provider       String
+  trxId          String?       @unique
+  senderNumber   String?
+  amountBdt      Int
+  status         PaymentStatus @default(PENDING)
+  rawPayload     Json?
+  createdAt      DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id])
+  plan         Plan?         @relation(fields: [planId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+// ---------- IMPORT PIPELINE ----------
+model ImportJob {
+  id          String       @id @default(cuid())
+  createdById String
+  fileUrl     String
+  fileType    String
+  status      ImportStatus @default(UPLOADED)
+  totalRows   Int          @default(0)
+  successRows Int          @default(0)
+  failedRows  Int          @default(0)
+  errorLog    Json?
+  createdAt   DateTime     @default(now())
+
+  createdBy User @relation(fields: [createdById], references: [id])
+}

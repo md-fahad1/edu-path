@@ -101,6 +101,7 @@ model User {
   badges        UserBadge[]
   xpLogs        XpLog[]
   challengeRuns ChallengeRun[]
+    interviewProgress InterviewProgress[]
 }
 
 model RefreshToken {
@@ -500,4 +501,49 @@ model ChallengeRun {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, date])
+}
+// ---------- INTERVIEW ----------
+model InterviewCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  questions InterviewQuestion[]
+}
+
+model InterviewQuestion {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  categoryId  String
+  question    String     @db.Text
+  answer      String     @db.Text
+  tips        String?    @db.Text
+  difficulty  Difficulty @default(MEDIUM)
+  tags        String[]
+  sortOrder   Int        @default(0)
+  isPublished Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  category InterviewCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  progress InterviewProgress[]
+
+  @@index([categoryId, isPublished, sortOrder])
+}
+
+model InterviewProgress {
+  userId     String
+  questionId String
+  status     String // KNOWN | REVIEW
+  updatedAt  DateTime @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
 }

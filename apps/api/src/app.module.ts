@@ -20,6 +20,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { AdminModule } from './admin/admin.module';
 import { SitemapModule } from './sitemap/sitemap.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { InterviewModule } from './interview/interview.module';
 @Controller('health')
 class HealthController {
   @Get() ok() { return { status: 'ok', time: new Date().toISOString() }; }
@@ -30,7 +31,7 @@ class HealthController {
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 240 }]),
     CommonModule, AuthModule, UsersModule, CatalogModule, QuestionsModule, ExamsModule, TestsModule, PracticeModule,
-    AnalyticsModule,GamificationModule, BookmarksModule, ReportsModule, SearchModule, SubscriptionsModule, AdminModule, SitemapModule,
+    AnalyticsModule,GamificationModule,InterviewModule, BookmarksModule, ReportsModule, SearchModule, SubscriptionsModule, AdminModule, SitemapModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, RolesGuard],

@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admission', label: 'ভর্তি পরীক্ষা' },
   { href: '/practice', label: 'প্র্যাকটিস' },
   { href: '/model-test', label: 'মডেল টেস্ট' },
+  { href: '/interview', label: 'ইন্টারভিউ' },
   { href: '/pricing', label: 'প্রিমিয়াম' },
 ];
 

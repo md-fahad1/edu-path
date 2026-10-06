@@ -12,7 +12,7 @@ export function Footer() {
           {CONTACT.email && <p className="mt-2 text-sm"><a href={`mailto:${CONTACT.email}`} className="text-slate-600 hover:text-brand-600 hover:underline">📧 {CONTACT.email}</a></p>}
         </div>
         <FooterCol title="পরীক্ষা" links={[['/hsc', 'এইচএসসি'], ['/bcs', 'বিসিএস প্রিলি'], ['/admission', 'ভর্তি পরীক্ষা'], ['/model-test', 'মডেল টেস্ট']]} />
-        <FooterCol title="শিখুন" links={[['/practice', 'প্র্যাকটিস মোড'], ['/dashboard', 'ড্যাশবোর্ড'], ['/bookmarks', 'বুকমার্ক'], ['/pricing', 'প্রিমিয়াম']]} />
+        <FooterCol title="শিখুন" links={[['/practice', 'প্র্যাকটিস মোড'], ['/interview', 'ইন্টারভিউ প্রস্তুতি'], ['/dashboard', 'ড্যাশবোর্ড'], ['/bookmarks', 'বুকমার্ক'], ['/pricing', 'প্রিমিয়াম']]} />
         <FooterCol title="তথ্য" links={[['/about', 'আমাদের সম্পর্কে'], ['/contact', 'যোগাযোগ'], ['/privacy', 'প্রাইভেসি পলিসি'], ['/terms', 'শর্তাবলি'], ['/refund', 'রিফান্ড পলিসি']]} />
       </div>
       <p className="border-t border-slate-100 py-4 text-center text-xs text-slate-500">© {new Date().getFullYear()} {SITE_NAME}. সর্বস্বত্ব সংরক্ষিত।</p>

@@ -6,7 +6,7 @@ import { Loading } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 const LINKS = [
-  ['/admin', '📊 ড্যাশবোর্ড', false], ['/admin/review', '✅ রিভিউ কিউ', false], ['/admin/questions', '❓ প্রশ্ন', false], ['/admin/imports', '📥 CSV ইমপোর্ট', false],
+  ['/admin', '📊 ড্যাশবোর্ড', false], ['/admin/review', '✅ রিভিউ কিউ', false], ['/admin/questions', '❓ প্রশ্ন', false], ['/admin/imports', '📥 CSV ইমপোর্ট', false], ['/admin/interview', '🎤 ইন্টারভিউ', false],
   ['/admin/tests', '📝 টেস্ট', false], ['/admin/catalog', '🗂 ক্যাটালগ', true], ['/admin/reports', '⚑ রিপোর্ট', true], ['/admin/users', '👥 ইউজার', true], ['/admin/payments', '💳 পেমেন্ট ও প্ল্যান', true],
 ] as const;
 

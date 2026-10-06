@@ -125,7 +125,7 @@ class InterviewAdminController {
     const p = Math.max(1, Number(page) || 1);
     const take = 30;
     const where = categoryId ? { categoryId } : {};
-    const [items, total] = await this.prisma.$transaction([
+    const [items, total] = await Promise.all([
       this.prisma.interviewQuestion.findMany({
         where, orderBy: { createdAt: 'desc' }, skip: (p - 1) * take, take,
         select: { id: true, question: true, difficulty: true, isPublished: true, category: { select: { name: true } } },

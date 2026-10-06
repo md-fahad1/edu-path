@@ -21,7 +21,15 @@ export function QuestionCard({ q, no, link = true, initiallyOpen = false }: { q:
   async function pick(id: string) {
     if (picked) return;
     setPicked(id);
-    if (user) api('/practice/answer', { method: 'POST', json: { questionId: q.id, optionId: id } }).catch(() => undefined);
+    if (user) {
+      api<{ notebook?: { event?: string | null } | null }>('/practice/answer', { method: 'POST', json: { questionId: q.id, optionId: id } })
+        .then((r) => {
+          const ev = r?.notebook?.event;
+          if (ev === 'added') toast.info('📓 নোটবুকে যোগ হয়েছে, পরে আবার দেখাব');
+          if (ev === 'mastered') toast.success('🎉 শিখে ফেলেছেন! নোটবুক থেকে সরানো হলো');
+        })
+        .catch(() => undefined);
+    }
   }
   async function bookmark() {
     const r = await api<{ bookmarked: boolean }>(`/bookmarks/${q.id}`, { method: 'POST' }).catch(() => null);

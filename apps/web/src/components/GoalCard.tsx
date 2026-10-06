@@ -15,7 +15,7 @@ export function GoalCard({ solved, goal }: { solved: number; goal: number }) {
             {done ? '🎉 অসাধারণ! আজকের লক্ষ্য পূরণ হয়েছে। আরও করলে বাড়তি লাভ।' : `আর ${bn(goal - solved)}টি প্রশ্ন সমাধান করলেই আজকের লক্ষ্য পূরণ।`}
           </p>
         </div>
-        <LinkButton href="/practice" size="sm" variant={done ? 'outline' : 'primary'}>{done ? 'আরও প্র্যাকটিস' : 'প্র্যাকটিস শুরু করুন'}</LinkButton>
+        <LinkButton href="/practice?mode=smart" size="sm" variant={done ? 'outline' : 'primary'}>{done ? 'আরও প্র্যাকটিস' : 'প্র্যাকটিস শুরু করুন'}</LinkButton>
       </div>
       <div className="mt-3 flex items-center gap-3">
         <div className="flex-1"><Progress value={pct} tone={done ? 'green' : 'brand'} /></div>

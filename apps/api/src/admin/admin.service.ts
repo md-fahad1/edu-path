@@ -180,7 +180,7 @@ export class AdminService {
     for (const need of ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct'])
       if (idx(need) < 0) throw new BadRequestException(`CSV header-e "${need}" column nei`);
 
-    const chapters = await this.prisma.chapter.findMany({ select: { id: true, slug: true, topics: { select: { id: true, slug: true } } } });
+    const chapters = await this.prisma.chapter.findMany({ select: { id: true, slug: true, topics: { select: { id: true, slug: true, name: true } } } });
     const bySlug = new Map(chapters.map((c) => [c.slug, c]));
     const seen = new Set<string>();
     const out = [];
@@ -196,8 +196,9 @@ export class AdminService {
       const options = ['a', 'b', 'c', 'd'].map((l, i) => ({ label: LABELS[i], text: get(`option_${l}`), isCorrect: get('correct').toUpperCase() === l.toUpperCase() }));
       if (options.some((o) => !o.text)) errors.push('4 ti option-i lagbe');
       if (options.filter((o) => o.isCorrect).length !== 1) errors.push('correct column A/B/C/D hote hobe');
-      const topic = chapter && get('topic_slug') ? chapter.topics.find((t) => t.slug === get('topic_slug')) : undefined;
-      if (get('topic_slug') && chapter && !topic) errors.push(`topic_slug "${get('topic_slug')}" paoa jay nai`);
+      const topicKey = get('topic_slug') || get('topic'); // slug ba nam, duto-i cholbe
+      const topic = chapter && topicKey ? chapter.topics.find((t) => t.slug === topicKey || t.name.trim() === topicKey) : undefined;
+      if (topicKey && chapter && !topic) errors.push(`topic "${topicKey}" paoa jay nai`);
       const diff = (get('difficulty') || 'MEDIUM').toUpperCase();
       if (!['EASY', 'MEDIUM', 'HARD'].includes(diff)) errors.push('difficulty EASY/MEDIUM/HARD hobe');
       const year = get('year') ? Number(get('year')) : null;

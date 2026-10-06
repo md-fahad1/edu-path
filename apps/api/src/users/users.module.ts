@@ -84,6 +84,10 @@ class UsersController {
       this.prisma.passwordResetToken.deleteMany({ where: { userId: id } }),
       this.prisma.bookmark.deleteMany({ where: { userId: id } }),
       this.prisma.userTopicStat.deleteMany({ where: { userId: id } }),
+      this.prisma.userQuestionStat.deleteMany({ where: { userId: id } }),
+            this.prisma.xpLog.deleteMany({ where: { userId: id } }),
+      this.prisma.userBadge.deleteMany({ where: { userId: id } }),
+      this.prisma.challengeRun.deleteMany({ where: { userId: id } }),
       this.prisma.dailyActivity.deleteMany({ where: { userId: id } }),
       this.prisma.testAttempt.deleteMany({ where: { userId: id } }),
       this.prisma.subscription.updateMany({ where: { userId: id, status: 'ACTIVE' }, data: { status: 'CANCELLED' } }),
@@ -96,6 +100,7 @@ class UsersController {
       }),
     ]);
     return { ok: true };
+
   }
 }
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SITE_NAME } from '@/lib/utils';
+import { CONTACT } from '@/lib/site';
 
 export function Footer() {
   return (
@@ -8,6 +9,7 @@ export function Footer() {
         <div>
           <p className="text-lg font-bold text-brand-700">{SITE_NAME}</p>
           <p className="mt-2 text-sm text-slate-600">যাচাই-করা MCQ, সহজ ব্যাখ্যা আর স্মার্ট প্র্যাকটিস – পরীক্ষার প্রস্তুতি হোক ঝামেলাহীন।</p>
+          {CONTACT.email && <p className="mt-2 text-sm"><a href={`mailto:${CONTACT.email}`} className="text-slate-600 hover:text-brand-600 hover:underline">📧 {CONTACT.email}</a></p>}
         </div>
         <FooterCol title="পরীক্ষা" links={[['/hsc', 'এইচএসসি'], ['/bcs', 'বিসিএস প্রিলি'], ['/admission', 'ভর্তি পরীক্ষা'], ['/model-test', 'মডেল টেস্ট']]} />
         <FooterCol title="শিখুন" links={[['/practice', 'প্র্যাকটিস মোড'], ['/dashboard', 'ড্যাশবোর্ড'], ['/bookmarks', 'বুকমার্ক'], ['/pricing', 'প্রিমিয়াম']]} />

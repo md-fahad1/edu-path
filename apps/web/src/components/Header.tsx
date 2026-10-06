@@ -17,6 +17,12 @@ const NAV = [
   { href: '/pricing', label: 'প্রিমিয়াম' },
 ];
 
+// shudhu login user-er jonno
+const USER_NAV = [
+  { href: '/challenge', label: '🎯 চ্যালেঞ্জ' },
+  { href: '/leaderboard', label: '🏆 লিডারবোর্ড' },
+];
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const path = usePathname();
@@ -38,6 +44,9 @@ export function Header() {
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined} className={cn('rounded-lg px-3 py-2 text-[15px] font-medium hover:bg-slate-100', path.startsWith(n.href) ? 'text-brand-700' : 'text-slate-700')}>{n.label}</Link>
           ))}
+          {user && USER_NAV.map((n) => (
+            <Link key={n.href} href={n.href} className={cn('hidden rounded-lg px-3 py-2 text-[15px] font-medium hover:bg-slate-100 xl:block', path.startsWith(n.href) ? 'text-brand-700' : 'text-slate-700')}>{n.label}</Link>
+          ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden w-56 md:block xl:w-72"><SearchBox compact /></div>
@@ -46,6 +55,7 @@ export function Header() {
             <div className="flex items-center gap-1.5">
               {(user.role === 'ADMIN' || user.role === 'TEACHER') && <Link href="/admin" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50 sm:block">অ্যাডমিন</Link>}
               <Link href="/dashboard" className={btnClass('outline', 'sm')}>ড্যাশবোর্ড</Link>
+              <Link href="/notebook" className="hidden rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 sm:block">📓 নোটবুক</Link>
               <Link href="/profile" className="hidden rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 sm:block">প্রোফাইল</Link>
               <button className="hidden rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 sm:block" onClick={async () => { await logout(); router.push('/'); }}>লগআউট</button>
             </div>
@@ -64,6 +74,7 @@ export function Header() {
             {NAV.map((n) => <Link key={n.href} href={n.href} className="rounded-lg px-3 py-2.5 font-medium text-slate-800 hover:bg-slate-50">{n.label}</Link>)}
             {user && (user.role === 'ADMIN' || user.role === 'TEACHER') && <Link href="/admin" className="rounded-lg px-3 py-2.5 font-medium text-violet-700 hover:bg-violet-50">অ্যাডমিন</Link>}
             {user && <Link href="/bookmarks" className="rounded-lg px-3 py-2.5 font-medium text-slate-800 hover:bg-slate-50">বুকমার্ক</Link>}
+            {user && <Link href="/notebook" className="rounded-lg px-3 py-2.5 font-medium text-slate-800 hover:bg-slate-50">📓 নোটবুক</Link>}
             {user && <Link href="/profile" className="rounded-lg px-3 py-2.5 font-medium text-slate-800 hover:bg-slate-50">প্রোফাইল</Link>}
             {user && <button className="rounded-lg px-3 py-2.5 text-left font-medium text-rose-600 hover:bg-rose-50" onClick={async () => { await logout(); router.push('/'); }}>লগআউট</button>}
           </nav>

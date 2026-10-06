@@ -12,6 +12,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Providers } from '@/components/Providers';
 import { SITE, SITE_NAME } from '@/lib/utils';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="bn" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: initScript }} />
+        <Script id="init-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: initScript }} />
       </head>
       <body className="min-h-screen antialiased">
         <Providers>

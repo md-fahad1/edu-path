@@ -1,17 +1,31 @@
 import type { Metadata } from 'next';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import { LegalPage } from '@/components/LegalPage';
 
 export const metadata: Metadata = { title: 'রিফান্ড পলিসি', description: 'প্রিমিয়াম সাবস্ক্রিপশনের রিফান্ড নীতি।', alternates: { canonical: '/refund' } };
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-3xl">
-      <Breadcrumb items={[{ name: 'রিফান্ড পলিসি' }]} />
-      <h1 className="mb-4 text-3xl font-bold">রিফান্ড পলিসি</h1>
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 leading-8 text-slate-700 sm:p-8">
-        <ul className="list-inside list-disc"><li>পেমেন্টের ৭ দিনের মধ্যে ও প্রিমিয়াম কনটেন্ট ব্যবহার না করলে রিফান্ডের আবেদন করা যাবে।</li><li>ভুল TrxID বা ভুল নম্বরে পাঠানো অর্থ যাচাইয়ের পর ফেরত দেওয়া হবে।</li><li>রিফান্ড bKash/Nagad-এ ৫–৭ কর্মদিবসের মধ্যে পাঠানো হয়।</li></ul>
-        <p className="text-sm text-slate-400">এটি একটি টেমপ্লেট; পেমেন্ট গেটওয়ে অনুমোদনের আগে আপনার প্রকৃত নীতি অনুযায়ী সম্পাদনা করুন।</p>
-      </div>
-    </div>
+    <LegalPage title="রিফান্ড পলিসি">
+      <h2>রিফান্ডের যোগ্যতা</h2>
+      <ul>
+        <li>পেমেন্টের <b>৭ দিনের মধ্যে</b> আবেদন করতে হবে এবং প্রিমিয়াম কনটেন্ট (প্রিমিয়াম টেস্ট) ব্যবহার করা যাবে না।</li>
+        <li>ভুল TrxID বা ভুল নম্বরে পাঠানো অর্থ যাচাইয়ের পর ফেরত দেওয়া হবে।</li>
+        <li>একই সেবার জন্য দুইবার পেমেন্ট হয়ে গেলে অতিরিক্ত অর্থ ফেরত দেওয়া হবে।</li>
+        <li>পেমেন্ট করার পর যাচাই হয়নি বা প্রিমিয়াম চালু হয়নি – এমন ক্ষেত্রে পুরো অর্থ ফেরতযোগ্য।</li>
+      </ul>
+
+      <h2>যেসব ক্ষেত্রে রিফান্ড হয় না</h2>
+      <ul>
+        <li>প্রিমিয়াম ব্যবহার শুরুর পর বা ৭ দিন পার হলে।</li>
+        <li>শর্ত ভঙ্গের কারণে অ্যাকাউন্ট বন্ধ হলে।</li>
+      </ul>
+
+      <h2>কীভাবে আবেদন করবেন</h2>
+      <ol className="list-inside list-decimal">
+        <li><a href="/contact" className="text-brand-700 underline">যোগাযোগ</a> পেজের মাধ্যমে জানান।</li>
+        <li>রেজিস্টার্ড ইমেইল/ফোন, TrxID, পরিমাণ ও কারণ লিখুন।</li>
+        <li>যাচাই শেষে ৫–৭ কর্মদিবসের মধ্যে bKash/Nagad-এ ফেরত পাঠানো হবে।</li>
+      </ol>
+    </LegalPage>
   );
 }

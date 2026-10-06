@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { bn } from '@/lib/utils';
+import { CONTACT } from '@/lib/site';
 import { Button, Card, ErrorBox, Input, Select } from '@/components/ui';
 
 type Plan = { id: string; name: string; priceBdt: number; durationDays: number; features: string[] };
@@ -46,7 +47,7 @@ function ManualPay({ plan, onClose }: { plan: Plan; onClose: () => void }) {
     <Card className="mx-auto mt-6 max-w-lg">
       <h3 className="text-lg font-semibold">{plan.name} – ৳{bn(plan.priceBdt)}</h3>
       <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-slate-600">
-        <li>bKash/Nagad-এ <b>Send Money</b> করুন: <b className="text-slate-900">01XXXXXXXXX</b> <span className="text-slate-400">(অ্যাডমিন নিজের নম্বর বসাবেন)</span></li>
+        <li>bKash/Nagad-এ <b>Send Money</b> করুন: {CONTACT.payNumber ? <b className="text-slate-900">{CONTACT.payNumber}</b> : <span className="text-amber-600">পেমেন্ট নম্বর শীঘ্রই যোগ হবে – যোগাযোগ করুন</span>}</li>
         <li>পরিমাণ: ৳{bn(plan.priceBdt)}</li><li>নিচে TrxID ও যে নম্বর থেকে পাঠিয়েছেন তা লিখুন।</li>
       </ol>
       <form onSubmit={submit} className="mt-4 space-y-3">

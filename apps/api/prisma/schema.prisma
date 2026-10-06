@@ -81,6 +81,7 @@ model User {
   targetCategory String?
   dailyGoal      Int       @default(10)
   onboardedAt    DateTime?
+  xp             Int       @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -92,10 +93,14 @@ model User {
   subscriptions Subscription[]
   payments      Payment[]
   topicStats    UserTopicStat[]
+  questionStats UserQuestionStat[]
   dailyActivity DailyActivity[]
   reviewed      Question[]       @relation("ReviewedBy")
   created       Question[]       @relation("CreatedBy")
   importJobs    ImportJob[]
+  badges        UserBadge[]
+  xpLogs        XpLog[]
+  challengeRuns ChallengeRun[]
 }
 
 model RefreshToken {
@@ -231,6 +236,7 @@ model Question {
   answers   AttemptAnswer[]
   bookmarks Bookmark[]
   reports   QuestionReport[]
+  userStats UserQuestionStat[]
 
   @@index([chapterId, status])
   @@index([topicId])
@@ -436,4 +442,62 @@ model ImportJob {
   createdAt   DateTime     @default(now())
 
   createdBy User @relation(fields: [createdById], references: [id])
+}
+// Proti user-er proti prosno-r hisab: bhul hole notebook-e, spaced repetition (1/3/7 din)
+model UserQuestionStat {
+  userId         String
+  questionId     String
+  attempts       Int       @default(0)
+  correctCount   Int       @default(0)
+  wrongCount     Int       @default(0)
+  inNotebook     Boolean   @default(false)
+  box            Int       @default(0)
+  nextReviewAt   DateTime?
+  lastAnsweredAt DateTime  @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
+  @@index([userId, inNotebook, nextReviewAt])
+}
+model UserBadge {
+  userId   String
+  code     String
+  earnedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, code])
+}
+
+model XpLog {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt, userId])
+}
+
+/// Din-er challenge-er prosno-set (shobar jonno ek, tai leaderboard fair)
+model DailyChallenge {
+  date        DateTime @id @db.Date
+  questionIds String[]
+}
+
+model ChallengeRun {
+  userId      String
+  date        DateTime  @db.Date
+  answers     Json      @default("{}")
+  correct     Int       @default(0)
+  answered    Int       @default(0)
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
 }

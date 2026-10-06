@@ -7,7 +7,9 @@ import { bn, cn } from '@/lib/utils';
 import { Badge, Card, Empty, ErrorState, LinkButton, Loading, PageTitle, Progress, Stat, accTone } from '@/components/ui';
 import { GoalCard } from '@/components/GoalCard';
 import { MyExam } from '@/components/MyExam';
-
+import { NotebookCard } from '@/components/NotebookCard';
+import { ChallengeCard } from '@/components/ChallengeCard';
+import { GamePanel } from '@/components/GamePanel';
 type Overview = { todaySolved: number; totalSolved: number; accuracy: number; streak: number; testsTaken: number; subjectAccuracy: { subject: string; attempted: number; accuracy: number }[] };
 type Weak = { topicId: string; topic: string; chapterId: string; chapter: string; accuracy: number; attempted: number }[];
 type Hist = { id: string; title: string; slug: string; score: number; total: number; correct: number; wrong: number; skipped: number; at: string }[];
@@ -38,19 +40,21 @@ export function DashboardClient() {
         </Card>
       )}
       {me.data && <GoalCard solved={o?.todaySolved ?? 0} goal={me.data.dailyGoal} />}
+      <NotebookCard />
       {me.data?.targetCategory && <MyExam slug={me.data.targetCategory} />}
+            <ChallengeCard />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="মোট সমাধান" value={bn(o?.totalSolved ?? 0)} />
         <Stat label="সঠিকতা" value={`${bn(o?.accuracy ?? 0)}%`} />
         <Stat label="🔥 স্ট্রিক" value={`${bn(o?.streak ?? 0)} দিন`} hint="প্রতিদিন অন্তত ১টি প্রশ্ন" />
         <Stat label="টেস্ট দিয়েছেন" value={bn(o?.testsTaken ?? 0)} />
       </div>
-
+            <div className="mt-5"><GamePanel /></div>
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <Card>
           <h2 className="mb-3 font-semibold">⚠️ দুর্বল টপিক</h2>
           {weak.data?.length ? <ul className="space-y-3">{weak.data.map((w) => (
-            <li key={w.topicId}><div className="mb-1 flex items-center justify-between text-sm"><span><b>{w.topic}</b> <span className="text-slate-500">· {w.chapter}</span></span><span className="font-semibold text-rose-600">{bn(w.accuracy)}%</span></div><Progress value={w.accuracy} tone={accTone(w.accuracy)} /><Link href={`/practice?chapterId=${w.chapterId}`} className="mt-1 inline-block text-xs text-brand-700 hover:underline">প্র্যাকটিস করুন →</Link></li>))}</ul>
+            <li key={w.topicId}><div className="mb-1 flex items-center justify-between text-sm"><span><b>{w.topic}</b> <span className="text-slate-500">· {w.chapter}</span></span><span className="font-semibold text-rose-600">{bn(w.accuracy)}%</span></div><Progress value={w.accuracy} tone={accTone(w.accuracy)} /><Link href={`/practice?mode=smart&chapterId=${w.chapterId}`} className="mt-1 inline-block text-xs text-brand-700 hover:underline">প্র্যাকটিস করুন →</Link></li>))}</ul>
             : <p className="text-slate-500">কয়েকটি প্রশ্ন সমাধান করলে আপনার দুর্বল টপিক এখানে দেখা যাবে।</p>}
         </Card>
         <Card>

@@ -160,7 +160,7 @@ export class TestsService {
     const byQ = new Map(attempt.answers.map((a) => [a.questionId, a]));
     let correct = 0, wrong = 0, skipped = 0;
     const updates: ReturnType<PrismaService['attemptAnswer']['update']>[] = [];
-    const recs: { topicId: string | null; correct: boolean }[] = [];
+    const recs: { topicId: string | null; correct: boolean; questionId: string }[] = [];
 
     for (const { question } of test!.questions) {
       const ans = byQ.get(question.id);
@@ -168,7 +168,7 @@ export class TestsService {
       const right = question.options.find((o) => o.isCorrect)?.id;
       const ok = ans.selectedOptionId === right;
       ok ? correct++ : wrong++;
-      recs.push({ topicId: question.topicId, correct: ok });
+      recs.push({ topicId: question.topicId, correct: ok, questionId: question.id });
       updates.push(this.prisma.attemptAnswer.update({ where: { id: ans.id }, data: { isCorrect: ok } }));
     }
     const score = Math.round((correct * attempt.test.markPerQ - wrong * attempt.test.negativeMark) * 100) / 100;

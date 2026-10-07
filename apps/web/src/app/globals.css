@@ -73,3 +73,7 @@ html.dark .text-violet-700 { color: #c4b5fd; }
 html.dark .border-rose-200 { border-color: #6b2a3a; }
 html.dark .border-brand-300 { border-color: #3a5db3; }
 html.dark .skeleton { background: linear-gradient(90deg, #1a2236 25%, #232d47 37%, #1a2236 63%); background-size: 400% 100%; }
+html,
+body {
+  overflow-x: clip;
+}

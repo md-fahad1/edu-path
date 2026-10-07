@@ -46,6 +46,8 @@ export async function api<T = any>(path: string, opts: RequestInit & { json?: un
       },
       body: json !== undefined ? JSON.stringify(json) : init.body,
     });
+  // cached ইউজার আছে কিন্তু token এখনো আসেনি: চলমান refresh এর জন্য অপেক্ষা (ব্যর্থ 401 কল এড়াতে)
+  if (!useAuth.getState().token && useAuth.getState().user && !path.startsWith('/auth/')) await useAuth.getState().refresh();
   let res = await run(useAuth.getState().token);
   if (res.status === 401 && !path.startsWith('/auth/')) {
     const ok = await useAuth.getState().refresh();

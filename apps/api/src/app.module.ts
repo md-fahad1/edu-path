@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { Controller, Get } from '@nestjs/common';
 import { CommonModule } from './common/common.module';
+import { PrismaService } from './prisma/prisma.service';
 import { RolesGuard } from './common/roles';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -23,7 +24,10 @@ import { GamificationModule } from './gamification/gamification.module';
 import { InterviewModule } from './interview/interview.module';
 @Controller('health')
 class HealthController {
+  constructor(private prisma: PrismaService) {}
   @Get() ok() { return { status: 'ok', time: new Date().toISOString() }; }
+  /** ডেটাবেসসহ ping: Neon/ব্যাকএন্ড ঘুমিয়ে পড়া ঠেকাতে */
+  @Get('db') async db() { await this.prisma.$queryRaw`SELECT 1`; return { status: 'ok', db: true }; }
 }
 
 @Module({

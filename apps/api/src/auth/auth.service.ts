@@ -63,6 +63,11 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     if (row.expiresAt < new Date() || !row.user.isActive) throw new UnauthorizedException();
+    // ৬ ঘণ্টার মধ্যে নতুন refresh token বানানো লাগে না: শুধু নতুন access token (DB তে মাত্র ১টি query)
+    if (Date.now() - row.createdAt.getTime() < 6 * 3_600_000) {
+      const accessToken = await this.jwt.signAsync({ sub: row.user.id, role: row.user.role });
+      return { accessToken, refreshToken: token, user: this.publicUser(row.user) };
+    }
     await this.prisma.refreshToken.update({ where: { id: row.id }, data: { revokedAt: new Date() } });
     return this.issue(row.user);
   }
